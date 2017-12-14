@@ -7,7 +7,7 @@ import sys
 import time
 
 # logging setup
-log = logging.getLogger('coinmarketcap-exporter')
+log = logging.getLogger('spotinstance')
 log.setLevel(logging.INFO)
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.INFO)
@@ -29,15 +29,16 @@ class SpotMetric():
     # add the response time as a metric
     metric.add_sample('spotinstance_api_response_time', value=float(request_time), labels={'name': 'AWS Spot Instance Pricing API'})
     yield metric
-    metric = Metric('spotinstance', 'spot instance pricing', 'guage')
+    metric = Metric('spotinstance', 'spot instance pricing', 'gauge')
     # each['region'] = us-east
     for each in response['config']['regions']:
       # each['sizes'] = list of instance sizes
       for that in each['instanceTypes']:
         for it in that['sizes']:
-        if it['valueColumns'][0]['prices']['USD'] is not None:
-        metric.add_sample('spotmetric', value=float(it['valueColumns'][0]['prices']['USD'], labels={'region': each['region'], 'size': it['size'].replace('.', '_']})
+          if it['valueColumns'][0]['prices']['USD'] != 'N/A*':
+            metric.add_sample('spotinstance', value=float(it['valueColumns'][0]['prices']['USD']), labels={'region': each['region'], 'size': it['size'].replace('.', '_')})
     yield metric
+
 if __name__ == '__main__':
   try:
     parser = argparse.ArgumentParser(
